@@ -12,5 +12,5 @@ require (
 	golang.org/x/oauth2 v0.0.0-20180821212333-d2e6202438be // indirect
 	golang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f // indirect
 	google.golang.org/appengine v1.1.0 // indirect
-	gopkg.in/square/go-jose.v2 v2.1.8 // indirect
+	gopkg.in/square/go-jose.v2 v2.1.8
 )

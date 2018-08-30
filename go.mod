@@ -3,7 +3,7 @@ module github.com/googlegenomics/ga4gh-identity
 require (
 	github.com/coreos/go-oidc v2.0.0+incompatible
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/golang/protobuf v1.2.0 // indirect
+	github.com/golang/protobuf v1.2.0
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/pquerna/cachecontrol v0.0.0-20180517163645-1555304b9b35 // indirect
 	github.com/stretchr/testify v1.2.2 // indirect

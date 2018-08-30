@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package validator contains implementations of the ga4gh.Validator interface.
-package validator
+// Package shim provides implementations of the ga4gh.Shim interface for
+// shimming between different identity providers and GA4GH identities.
+package shim
 
 import (
 	"context"
@@ -21,13 +22,12 @@ import (
 	ga4gh "github.com/googlegenomics/ga4gh-identity"
 )
 
-// Constant is a ga4gh.Validator that returns a set success and error value.
-type Constant struct {
-	OK  bool
-	Err error
+// Static is a ga4gh.Shim that returns a single static Identity.
+type Static struct {
+	Identity *ga4gh.Identity
 }
 
-// Validate always returns (c.OK, c.Err).
-func (c *Constant) Validate(context.Context, *ga4gh.Identity) (bool, error) {
-	return c.OK, c.Err
+// Shim implements the ga4gh.Shim interface.
+func (s *Static) Shim(context.Context, string) (*ga4gh.Identity, error) {
+	return s.Identity, nil
 }

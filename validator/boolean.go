@@ -18,7 +18,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/googlegenomics/ga4gh-identity"
+	ga4gh "github.com/googlegenomics/ga4gh-identity"
 )
 
 // Or is a ga4gh.Validator that succeeds if any of the wrapped validators

@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/googlegenomics/ga4gh-identity"
+	ga4gh "github.com/googlegenomics/ga4gh-identity"
 )
 
 func TestBoolean(t *testing.T) {

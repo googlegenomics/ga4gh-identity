@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"net/http"
 	"path"
+	"strings"
 
 	"golang.org/x/crypto/sha3"
 	cloudresourcemanager "google.golang.org/api/cloudresourcemanager/v1"
@@ -122,6 +123,9 @@ func (wh *AccountWarehouse) getBackingAccount(ctx context.Context, id string) (s
 	name := accountID(wh.opts.Project, fmt.Sprintf("%s@%s.iam.gserviceaccount.com", hid, wh.opts.Project))
 	account, err := service.Get(name).Context(ctx).Do()
 	if err == nil {
+		if err := wh.configureRole(ctx, account.Email); err != nil {
+			return "", fmt.Errorf("configuring role for existing account: %v", err)
+		}
 		return account.Email, nil
 	}
 	if err, ok := err.(*googleapi.Error); !ok || err.Code != http.StatusNotFound {
@@ -137,8 +141,50 @@ func (wh *AccountWarehouse) getBackingAccount(ctx context.Context, id string) (s
 	if err != nil {
 		return "", fmt.Errorf("creating backing account: %v", err)
 	}
-	// TODO(#3): Update IAM policy bindings to add SA to default role.
+	if err := wh.configureRole(ctx, account.Email); err != nil {
+		return "", fmt.Errorf("configuring role for new account: %v", err)
+	}
 	return account.Email, nil
+}
+
+func (wh *AccountWarehouse) configureRole(ctx context.Context, email string) error {
+	role := wh.opts.DefaultRole
+
+	project := wh.opts.Project
+	if parts := strings.Split(role, "/"); len(parts) == 4 && parts[0] == "projects" {
+		project = parts[1]
+	}
+
+	projects := wh.crm.Projects
+	policy, err := projects.GetIamPolicy(project, &cloudresourcemanager.GetIamPolicyRequest{}).Context(ctx).Do()
+	if err != nil {
+		return fmt.Errorf("getting IAM policy for project %q: %v", project, err)
+	}
+
+	var binding *cloudresourcemanager.Binding
+	for _, b := range policy.Bindings {
+		if b.Role == role {
+			binding = b
+			break
+		}
+	}
+	if binding == nil {
+		return fmt.Errorf("no bindings for %q in policy", role)
+	}
+
+	qualifiedName := "serviceAccount:" + email
+	for _, member := range binding.Members {
+		if member == qualifiedName {
+			return nil
+		}
+	}
+
+	binding.Members = append(binding.Members, qualifiedName)
+	_, err = projects.SetIamPolicy(project, &cloudresourcemanager.SetIamPolicyRequest{Policy: policy}).Context(ctx).Do()
+	if err != nil {
+		return fmt.Errorf("setting IAM policy for project %q: %v", project, err)
+	}
+	return nil
 }
 
 func hashID(id string) string {

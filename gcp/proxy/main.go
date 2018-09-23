@@ -19,7 +19,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -27,56 +26,22 @@ import (
 	"os"
 	"strings"
 
-	"github.com/golang/protobuf/proto"
 	ga4gh "github.com/googlegenomics/ga4gh-identity"
-	"github.com/googlegenomics/ga4gh-identity/builder"
 	"github.com/googlegenomics/ga4gh-identity/gcp"
-	"golang.org/x/oauth2/google"
+	"github.com/googlegenomics/ga4gh-identity/gcp/internal/appengine"
 )
 
 func main() {
-	target := mustGetenv("TARGET")
+	target := os.Getenv("TARGET")
 	t, err := url.Parse(target)
 	if err != nil {
 		log.Fatalf("Error parsing TARGET=%q: %v", target, err)
 	}
 
-	ev, err := buildEvaluator(mustGetenv("CONFIG"))
-	if err != nil {
-		log.Fatalf("Error building evaluator: %v", err)
-	}
-
-	client, err := google.DefaultClient(context.Background(), "https://www.googleapis.com/auth/cloud-platform")
-	if err != nil {
-		log.Fatalf("Error creating HTTP client: %v", err)
-	}
-
-	wh, err := gcp.NewAccountWarehouse(client, &gcp.AccountWarehouseOptions{
-		Project:     mustGetenv("PROJECT"),
-		DefaultRole: mustGetenv("ROLE"),
-		Scopes:      strings.Split(mustGetenv("SCOPES"), ","),
-	})
-	if err != nil {
-		log.Fatalf("Error creating account warehouse: %v", err)
-	}
-
-	log.Fatal(http.ListenAndServe(":"+mustGetenv("PORT"), newProxy(t, ev, wh)))
-}
-
-func mustGetenv(key string) string {
-	v := os.Getenv(key)
-	if v == "" {
-		log.Fatalf("Environment variable %q must be set, see app.yaml for more information.", key)
-	}
-	return v
-}
-
-func buildEvaluator(encoded string) (*ga4gh.Evaluator, error) {
-	var e builder.Evaluator
-	if err := proto.UnmarshalText(encoded, &e); err != nil {
-		return nil, fmt.Errorf("unmarshaling evaluator: %v", err)
-	}
-	return builder.Build(context.Background(), &e)
+	ctx := context.Background()
+	ev := appengine.MustBuildEvaluator(ctx)
+	wh := appengine.MustBuildAccountWarehouse(ctx)
+	log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), newProxy(t, ev, wh)))
 }
 
 type proxy struct {

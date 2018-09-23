@@ -3,9 +3,9 @@ runtime: go111
 env_variables:
   # TARGET determines which host this instance will reverse-proxy for.
   TARGET: "https://your-proxy-target-here"
-  # CONFIG is a text-encoded proto builder.Validator.  It configures the
+  # EVALUATOR is a text-encoded proto builder.Validator.  It configures the
   # complete parsing and validation pipeline.
-  CONFIG: |
+  EVALUATOR: |
     parser {
       shims {
         elixir {

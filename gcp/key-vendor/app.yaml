@@ -1,0 +1,25 @@
+runtime: go111
+
+env_variables:
+  # EVALUATOR is a text-encoded proto builder.Validator.  It configures the
+  # complete parsing and validation pipeline.
+  EVALUATOR: |
+    parser {
+      shims {
+        elixir {
+          client_id: "your-client-id-here"
+        }
+      }
+    }
+    validator {
+      constant {
+        value: true
+      }
+    }
+  # PROJECT determines which project backing service accounts for incoming
+  # requests are created in.
+  PROJECT: "your-gcp-project-here"
+  # ROLE is assigned to backing service accounts as they are created.  The
+  # provided role should have the access your external identities require to
+  # operate.
+  ROLE: "roles/Viewer"
